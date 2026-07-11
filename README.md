@@ -1,24 +1,34 @@
 # Job Search Copilot
 
 Upload a resume, get a read on your career history, tell it what job you're
-targeting, and get a tailored resume back — plus a nudge to make sure it
-still sounds like a human wrote it, and a link to find a recruiter to
-network with.
+targeting, and get a tailored resume back — plus a nudge (with an
+interactive fix-it loop) to make sure it still sounds like a human wrote
+it, a networking lead, and one-click export when you're ready to send it.
+
+> **Status:** personal project, actively developed. Not yet deployed
+> publicly.
 
 ## How it works
 
 1. **Upload** a resume (PDF/DOCX/TXT) or paste the text.
 2. Claude extracts a structured resume (work history, skills, education,
    awards) and a career narrative, and flags whether it's detailed enough
-   to tailor confidently. If not, it asks clarifying questions.
+   to tailor confidently — with clarifying questions if not, which feed
+   directly into the tailored rewrite.
 3. You either **search real openings** (via the Adzuna job search API) or
    paste a job posting yourself.
 4. Claude rewrites the resume favorably for that job (no fabricated facts —
    only truthful reframing/emphasis) and the app generates a pre-filled
    LinkedIn search link to find a recruiter/talent-acquisition contact at
    that company.
-5. A tone check flags any AI-sounding boilerplate phrases before you send
-   the resume out, with a human-likeness score and suggestions.
+5. A tone check flags AI-sounding boilerplate phrases with a human-likeness
+   score. Answer its follow-up questions with real specifics (or skip any)
+   and it rewrites just those flagged phrases in place — the rest of the
+   resume stays untouched.
+6. Export the result as **.txt, .docx, or .pdf** whenever you're ready.
+7. Every tailored version is saved automatically — a **History** view lets
+   you browse and reload any past resume/job combination, and your most
+   recent one restores automatically the next time you sign in.
 
 ## Setup
 
@@ -85,9 +95,19 @@ if this proves valuable enough to justify the cost.
 
 - `src/app/api/resume/upload` — parses PDF/DOCX/TXT, stores raw text
 - `src/app/api/resume/analyze` — Claude: structure + polish check
-- `src/app/api/resume/tailor` — Claude: rewrite resume for a target job
+- `src/app/api/resume/tailor` — Claude: rewrite resume for a target job;
+  also handles the targeted revision pass after the tone check
 - `src/app/api/resume/tone-check` — Claude: flags AI-sounding phrasing
+- `src/app/api/resume/export` — generates .txt/.docx/.pdf downloads
+- `src/app/api/resume/latest` — restores the user's most recent progress
+- `src/app/api/resume/versions` — lists past tailored versions for History
 - `src/app/api/job/parse` — Claude: extract company/role, build LinkedIn link
 - `src/app/api/job/search` — Adzuna job search across ~19 countries
 - `src/components/ResumeCopilot.tsx` — the guided UI flow
+- `src/lib/resumeExport.ts` — docx/pdf generation from structured resume data
 - `supabase/schema.sql` — DB schema + RLS policies + storage bucket
+
+## License
+
+All rights reserved — see [LICENSE](LICENSE). This repo is public for
+portfolio/demonstration purposes; it isn't licensed for reuse.

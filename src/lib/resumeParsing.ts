@@ -1,18 +1,16 @@
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 
 export async function parseResumeFile(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const name = file.name.toLowerCase();
 
   if (name.endsWith(".pdf") || file.type === "application/pdf") {
-    const parser = new PDFParse({ data: buffer });
-    try {
-      const result = await parser.getText();
-      return result.text.trim();
-    } finally {
-      await parser.destroy();
-    }
+    // unpdf rejects Node's Buffer even though it's a Uint8Array subclass —
+    // it wants a plain Uint8Array.
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await extractText(pdf, { mergePages: true });
+    return text.trim();
   }
 
   if (

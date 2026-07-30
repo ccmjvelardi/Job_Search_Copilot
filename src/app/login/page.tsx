@@ -4,6 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+function friendlyErrorMessage(message: string) {
+  if (!message || message === "{}") {
+    return "Too many requests right now — please wait a few minutes and try again.";
+  }
+  return message;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -35,7 +42,7 @@ export default function LoginPage() {
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) {
-        setError(error.message);
+        setError(friendlyErrorMessage(error.message));
       } else {
         setInfo("Check your email to confirm your account, then sign in.");
       }
@@ -44,7 +51,7 @@ export default function LoginPage() {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       if (error) {
-        setError(error.message);
+        setError(friendlyErrorMessage(error.message));
       } else {
         setInfo("Check your email for a link to reset your password.");
       }

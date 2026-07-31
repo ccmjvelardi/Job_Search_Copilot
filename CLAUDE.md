@@ -21,11 +21,11 @@ runtime.
 
 - GitHub: `https://github.com/ccmjvelardi/Job_Search_Copilot.git` (branch `master`)
 - Deployed on Vercel, connected to that repo (auto-deploys on push)
-- Auth emails currently go out via Supabase's default shared mail sender
-  (looks like a Supabase email, low rate limit). White-labeling this needs
-  custom SMTP configured in Supabase (Project Settings → Authentication →
-  SMTP Settings) pointed at a real provider (Resend recommended) — not yet
-  done.
+- Auth emails go out via custom SMTP (Resend), configured in Supabase
+  (Project Settings → Authentication → SMTP Settings). Supabase's own
+  default shared mail sender is testing-only and enforces a low send cap
+  that isn't controlled by the dashboard's configurable auth rate limit —
+  that's why this was worth doing, not just cosmetic.
 - Repo license: all-rights-reserved (see `LICENSE`) — public for
   portfolio/visibility, not licensed for reuse. Deliberate choice since the
   plan is to eventually open this to other users as a hosted product, not

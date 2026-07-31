@@ -8,7 +8,12 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      const message =
+        "That link didn't work — it needs to be opened in the same browser you requested it from. Please request a new one.";
+      return NextResponse.redirect(`${origin}/login?authError=${encodeURIComponent(message)}`);
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`);

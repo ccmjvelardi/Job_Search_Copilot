@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +12,37 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+
+  // The reset link signs the user in before sending them here. If there's no
+  // session (link expired, reused, or page opened directly), say so up front
+  // instead of letting updateUser fail with "Auth session missing!".
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setHasSession(!!data.user));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (hasSession === null) {
+    return <main className="min-h-screen" />;
+  }
+
+  if (!hasSession) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+        <h1 className="text-2xl font-semibold">Reset link expired</h1>
+        <p className="text-sm text-neutral-500">
+          This password reset link has expired or was already used. Request a new one and
+          click the link in the email once.
+        </p>
+        <Link
+          href="/login?mode=forgotPassword"
+          className="rounded-md bg-neutral-900 px-3 py-2 text-center text-sm font-medium text-white dark:bg-white dark:text-neutral-900"
+        >
+          Request a new link
+        </Link>
+      </main>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

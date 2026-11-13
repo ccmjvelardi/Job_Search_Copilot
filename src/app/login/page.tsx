@@ -1,14 +1,20 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-function friendlyErrorMessage(message: string) {
-  if (!message || message === "{}") {
+// @supabase/auth-js falls back to JSON.stringify({}) === "{}" as the message
+// when an error response has no recognizable message field, so decide what
+// went wrong from the HTTP status instead of the message text.
+function friendlyErrorMessage(error: { message: string; status?: number }) {
+  if (error.status === 429) {
     return "Too many requests right now — please wait a few minutes and try again.";
   }
-  return message;
+  if (!error.message || error.message === "{}") {
+    return "Something went wrong sending the email. Please try again in a few minutes.";
+  }
+  return error.message;
 }
 
 export default function LoginPage() {
@@ -23,21 +29,20 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
-  const [mode, setMode] = useState<"signIn" | "signUp" | "forgotPassword">("signIn");
+  // An expired/used email link redirects here with ?authError=..., and the
+  // reset-password page links here with ?mode=forgotPassword — both should
+  // open straight into the "send reset link" form.
+  const initialAuthError = searchParams.get("authError");
+  const [mode, setMode] = useState<"signIn" | "signUp" | "forgotPassword">(() =>
+    initialAuthError || searchParams.get("mode") === "forgotPassword"
+      ? "forgotPassword"
+      : "signIn",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialAuthError);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const authError = searchParams.get("authError");
-    if (authError) {
-      setError(authError);
-      setMode("forgotPassword");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +65,7 @@ function LoginForm() {
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) {
-        setError(friendlyErrorMessage(error.message));
+        setError(friendlyErrorMessage(error));
       } else {
         setInfo("Check your email to confirm your account, then sign in.");
       }
@@ -69,7 +74,7 @@ function LoginForm() {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       if (error) {
-        setError(friendlyErrorMessage(error.message));
+        setError(friendlyErrorMessage(error));
       } else {
         setInfo("Check your email for a link to reset your password.");
       }

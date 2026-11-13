@@ -25,7 +25,18 @@ runtime.
   (Project Settings → Authentication → SMTP Settings). Supabase's own
   default shared mail sender is testing-only and enforces a low send cap
   that isn't controlled by the dashboard's configurable auth rate limit —
-  that's why this was worth doing, not just cosmetic.
+  that's why this was worth doing, not just cosmetic. The sending domain
+  (`jamesvelardi.com`) must stay verified in Resend — if it isn't, every
+  auth email fails with a 500 (`550 domain is not verified` in the Supabase
+  auth logs). Its DNS lives in Namecheap hosting cPanel → Zone Editor (the
+  nameservers point there, even though the registrar is Hostinger).
+- **Password reset uses a `token_hash` link, not PKCE.** The Supabase
+  "Reset Password" email template links to
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`.
+  `/auth/confirm` verifies it with `verifyOtp` on a button click, so it works
+  in any browser (PKCE links via `/auth/callback` only work in the browser
+  that requested them) and email scanners prefetching the link can't use up
+  the one-time token. Sign-up confirmation still goes through `/auth/callback`.
 - Repo license: all-rights-reserved (see `LICENSE`) — public for
   portfolio/visibility, not licensed for reuse. Deliberate choice since the
   plan is to eventually open this to other users as a hosted product, not
